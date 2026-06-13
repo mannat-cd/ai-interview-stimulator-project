@@ -78,7 +78,7 @@ AI-Interview-Simulator/
 └── README.md
 Installation
 Clone the Repository
-git clone https://github.com/yourusername/ai-interview-simulator.git
+git clone https://github.com/mannat-cd/ai-interview-stimulator-project/tree/main
 
 cd ai-interview-simulator
 Install Dependencies
