@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Interview Prep</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .container { width: 90%; max-width: 700px; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* Setup Screen */
+    .setup-card { background: #1e293b; border-radius: 20px; padding: 40px; text-align: center; }
+    .setup-card h1 { font-size: 2rem; color: #38bdf8; margin-bottom: 10px; }
+    .setup-card p { color: #94a3b8; margin-bottom: 30px; }
+    .setup-card input, .setup-card select { width: 100%; padding: 14px; margin-bottom: 16px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: #e2e8f0; font-size: 1rem; }
+    .btn { width: 100%; padding: 16px; border-radius: 10px; border: none; background: #38bdf8; color: #0f172a; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .btn:hover { background: #0ea5e9; }
+
+    /* Interview Screen */
+    .interview-card { background: #1e293b; border-radius: 20px; padding: 40px; text-align: center; }
+    .progress { color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px; }
+    .question-box { background: #0f172a; border-radius: 14px; padding: 24px; margin-bottom: 30px; font-size: 1.1rem; line-height: 1.7; min-height: 80px; border-left: 4px solid #38bdf8; text-align: left; }
+    .mic-btn { width: 100px; height: 100px; border-radius: 50%; border: none; background: #38bdf8; color: #0f172a; font-size: 2.5rem; cursor: pointer; transition: 0.2s; margin: 20px auto; display: block; }
+    .mic-btn.listening { background: #ef4444; animation: pulse 1s infinite; }
+    .mic-btn.disabled { background: #334155; cursor: not-allowed; }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+    .status { color: #94a3b8; margin: 10px 0; font-size: 0.95rem; min-height: 24px; }
+    .transcript-box { background: #0f172a; border-radius: 10px; padding: 16px; margin: 16px 0; min-height: 60px; text-align: left; color: #cbd5e1; font-style: italic; display: none; }
+    .submit-btn { display: none; width: 100%; padding: 14px; border-radius: 10px; border: none; background: #22c55e; color: white; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; }
+
+    /* Feedback Box */
+    .feedback-box { background: #0f172a; border-radius: 14px; padding: 20px; margin: 20px 0; text-align: left; display: none; border-left: 4px solid #22c55e; }
+    .feedback-box h3 { color: #22c55e; margin-bottom: 10px; }
+    .feedback-box p { line-height: 1.7; color: #cbd5e1; white-space: pre-line; }
+    .next-btn { display: none; width: 100%; padding: 14px; border-radius: 10px; border: none; background: #38bdf8; color: #0f172a; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; }
+
+    /* Results Screen */
+    .results-card { background: #1e293b; border-radius: 20px; padding: 40px; text-align: center; }
+    .results-card h1 { font-size: 2rem; color: #38bdf8; margin-bottom: 10px; }
+    .score-big { font-size: 4rem; font-weight: bold; color: #22c55e; margin: 20px 0; }
+    .results-list { text-align: left; margin: 20px 0; }
+    .result-item { background: #0f172a; border-radius: 10px; padding: 16px; margin-bottom: 12px; border-left: 4px solid #38bdf8; }
+    .result-item p { color: #94a3b8; font-size: 0.9rem; margin-top: 6px; line-height: 1.6; white-space: pre-line; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Setup Screen -->
+  <div id="setupScreen" class="screen active">
+    <div class="setup-card">
+      <h1>AI Interview Prep</h1>
+      <p>Practice with a real AI interviewer using your voice</p>
+      <input type="text" id="jobTitle" placeholder="Job title (e.g. Software Engineer, Data Analyst)" />
+      <select id="interviewType">
+        <option value="behavioral">Behavioral</option>
+        <option value="technical">Technical</option>
+        <option value="HR">HR Round</option>
+        <option value="case study">Case Study</option>
+      </select>
+      <select id="numQuestions">
+        <option value="3">3 Questions (Quick)</option>
+        <option value="5" selected>5 Questions (Standard)</option>
+        <option value="8">8 Questions (Full)</option>
+      </select>
+      <button class="btn" onclick="startInterview()">Start Interview</button>
+    </div>
+  </div>
+
+  <!-- Interview Screen -->
+  <div id="interviewScreen" class="screen">
+    <div class="interview-card">
+      <div class="progress" id="progress">Question 1 of 5</div>
+      <div class="question-box" id="questionBox">Loading your first question...</div>
+      <div class="status" id="status">Click the mic and speak your answer</div>
+      <button class="mic-btn" id="micBtn" onclick="toggleMic()">🎤</button>
+      <div class="transcript-box" id="transcriptBox"></div>
+      <button class="submit-btn" id="submitBtn" onclick="submitAnswer()">Submit Answer</button>
+      <div class="feedback-box" id="feedbackBox">
+        <h3>AI Feedback</h3>
+        <p id="feedbackText"></p>
+      </div>
+      <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Next Question →</button>
+    </div>
+  </div>
+
+  <!-- Results Screen -->
+  <div id="resultsScreen" class="screen">
+    <div class="results-card">
+      <h1>Interview Complete!</h1>
+      <div class="score-big" id="finalScore">0/10</div>
+      <p style="color:#94a3b8;">Average Score</p>
+      <div class="results-list" id="resultsList"></div>
+      <button class="btn" onclick="restartInterview()" style="margin-top:20px;">Practice Again</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let currentQuestion = '';
+  let currentQuestionNum = 1;
+  let totalQuestions = 5;
+  let jobTitle = '';
+  let transcript = '';
+  let recognition;
+  let isListening = false;
+  let allResults = [];
+  let scores = [];
+
+  function speak(text, onEnd) {
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'en-US';
+    utter.rate = 0.95;
+    utter.pitch = 1;
+    if (onEnd) utter.onend = onEnd;
+    window.speechSynthesis.speak(utter);
+  }
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  async function startInterview() {
+    jobTitle = document.getElementById('jobTitle').value || 'Software Engineer';
+    const interviewType = document.getElementById('interviewType').value;
+    totalQuestions = parseInt(document.getElementById('numQuestions').value);
+    currentQuestionNum = 1;
+    allResults = [];
+    scores = [];
+
+    showScreen('interviewScreen');
+    document.getElementById('progress').textContent = `Question 1 of ${totalQuestions}`;
+    document.getElementById('questionBox').textContent = 'Getting your first question...';
+    document.getElementById('status').textContent = 'Please wait...';
+    document.getElementById('micBtn').classList.add('disabled');
+
+    const res = await fetch('/start-interview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jobTitle, interviewType })
+    });
+    const data = await res.json();
+    currentQuestion = data.question;
+
+    document.getElementById('questionBox').textContent = currentQuestion;
+    document.getElementById('micBtn').classList.remove('disabled');
+    document.getElementById('status').textContent = 'Listen to the question, then click mic to answer';
+
+    speak(currentQuestion, () => {
+      document.getElementById('status').textContent = 'Click the mic and speak your answer';
+    });
+  }
+
+  function toggleMic() {
+    if (document.getElementById('micBtn').classList.contains('disabled')) return;
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  }
+
+  function startListening() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Speech recognition not supported. Please use Chrome!');
+      return;
+    }
+
+    recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    recognition.onstart = () => {
+      isListening = true;
+      document.getElementById('micBtn').classList.add('listening');
+      document.getElementById('micBtn').textContent = '⏹';
+      document.getElementById('status').textContent = 'Listening... speak now';
+      document.getElementById('transcriptBox').style.display = 'block';
+      document.getElementById('transcriptBox').textContent = '...';
+    };
+
+    recognition.onresult = (e) => {
+      let interim = '';
+      let final = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) final += e.results[i][0].transcript;
+        else interim += e.results[i][0].transcript;
+      }
+      transcript += final;
+      document.getElementById('transcriptBox').textContent = transcript + interim;
+    };
+
+    recognition.onend = () => {
+      isListening = false;
+      document.getElementById('micBtn').classList.remove('listening');
+      document.getElementById('micBtn').textContent = '🎤';
+      if (transcript.trim()) {
+        document.getElementById('status').textContent = 'Answer recorded! Submit when ready.';
+        document.getElementById('submitBtn').style.display = 'block';
+      } else {
+        document.getElementById('status').textContent = 'Nothing heard. Try again.';
+      }
+    };
+
+    transcript = '';
+    recognition.start();
+  }
+
+  function stopListening() {
+    if (recognition) recognition.stop();
+  }
+
+  async function submitAnswer() {
+    if (!transcript.trim()) return;
+
+    document.getElementById('submitBtn').style.display = 'none';
+    document.getElementById('micBtn').classList.add('disabled');
+    document.getElementById('status').textContent = 'AI is evaluating your answer...';
+
+    const res = await fetch('/evaluate-answer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        question: currentQuestion,
+        answer: transcript,
+        jobTitle,
+        questionNumber: currentQuestionNum,
+        totalQuestions
+      })
+    });
+    const data = await res.json();
+    const feedback = data.feedback;
+
+    // Extract score
+    const scoreMatch = feedback.match(/Score:\s*(\d+)/);
+    if (scoreMatch) scores.push(parseInt(scoreMatch[1]));
+
+    // Save result
+    allResults.push({ question: currentQuestion, answer: transcript, feedback });
+
+    // Extract next question if present
+    const nextQMatch = feedback.match(/Next Question:([\s\S]*?)$/);
+    if (nextQMatch) currentQuestion = nextQMatch[1].trim();
+
+    // Show feedback
+    document.getElementById('feedbackBox').style.display = 'block';
+    document.getElementById('feedbackText').textContent = feedback;
+
+    // Speak feedback (without next question part)
+    const feedbackToSpeak = feedback.replace(/Next Question:[\s\S]*$/, '').trim();
+    speak(feedbackToSpeak, () => {
+      if (currentQuestionNum < totalQuestions) {
+        document.getElementById('nextBtn').style.display = 'block';
+        document.getElementById('status').textContent = 'Ready for next question?';
+      } else {
+        showResults();
+      }
+    });
+  }
+
+  function nextQuestion() {
+    currentQuestionNum++;
+    document.getElementById('progress').textContent = `Question ${currentQuestionNum} of ${totalQuestions}`;
+    document.getElementById('questionBox').textContent = currentQuestion;
+    document.getElementById('feedbackBox').style.display = 'none';
+    document.getElementById('nextBtn').style.display = 'none';
+    document.getElementById('transcriptBox').style.display = 'none';
+    document.getElementById('transcriptBox').textContent = '';
+    document.getElementById('micBtn').classList.remove('disabled');
+    document.getElementById('micBtn').textContent = '🎤';
+    transcript = '';
+
+    document.getElementById('status').textContent = 'Listen to the question...';
+    speak(currentQuestion, () => {
+      document.getElementById('status').textContent = 'Click the mic and speak your answer';
+    });
+  }
+
+  function showResults() {
+    const avg = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+    document.getElementById('finalScore').textContent = `${avg}/10`;
+
+    const list = document.getElementById('resultsList');
+    list.innerHTML = '';
+    allResults.forEach((r, i) => {
+      list.innerHTML += `
+        <div class="result-item">
+          <strong>Q${i + 1}: ${r.question}</strong>
+          <p>${r.feedback}</p>
+        </div>`;
+    });
+    showScreen('resultsScreen');
+    speak(`Interview complete! Your average score is ${avg} out of 10. Great practice!`);
+  }
+
+  function restartInterview() {
+    window.speechSynthesis.cancel();
+    showScreen('setupScreen');
+  }
+</script>
+</body>
+</html>
